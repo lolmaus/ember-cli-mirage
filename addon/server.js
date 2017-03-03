@@ -16,6 +16,7 @@ import _assign from 'lodash/assign';
 import _find from 'lodash/find';
 import _isPlainObject from 'lodash/isPlainObject';
 import _isInteger from 'lodash/isInteger';
+import _forOwn from 'lodash/forOwn';
 
 const { RSVP: { Promise } } = Ember;
 
@@ -155,11 +156,14 @@ export default class Server {
 
     this.options = config;
 
-    this.timing = this.timing || config.timing || 400;
-    this.namespace = this.namespace || config.namespace || '';
-    this.urlPrefix = this.urlPrefix || config.urlPrefix || '';
-    this.persistDb = !this.isTest() && config.addonConfig && config.addonConfig.persistDb;
-    this.persistDbVersion = config.addonConfig && config.addonConfig.persistDbVersion || 1;
+    this._applyOptionsWithDefaults({
+      timing: this.isTest() ? 400 : 0,
+      namespace: '',
+      urlPrefix: '',
+      persistDb: !this.isTest() && config.addonConfig && config.addonConfig.persistDb,
+      persistDbVersion: config.addonConfig && config.addonConfig.persistDbVersion || 1,
+      logging: false
+    });
 
     this._defineRouteHandlerHelpers();
 
@@ -177,21 +181,21 @@ export default class Server {
 
     this.pretender = this.pretender || createPretender(this);
 
-    if (config.baseConfig) {
-      this.loadConfig(config.baseConfig);
+    if (typeof config.baseConfig === 'function') {
+      config.baseConfig.call(this);
     }
 
     if (this.isTest()) {
-      if (config.testConfig) {
-        this.loadConfig(config.testConfig);
+      if (typeof config.testConfig === 'function') {
+        config.testConfig.call(this);
       }
 
       window.server = this; // TODO: Better way to inject server into test env
     }
 
-    if (this.isTest() && hasFactories) {
+    if (!this.persistDb && this.isTest() && hasFactories) {
       this.loadFactories(config.factories);
-    } else if (!this.isTest() && hasDefaultScenario) {
+    } else if (this.persistDb || !this.isTest() && hasDefaultScenario) {
       this.loadFactories(config.factories);
       this.populateDatabase();
     } else {
@@ -201,6 +205,16 @@ export default class Server {
     if (config.useDefaultPassthroughs) {
       this._configureDefaultPassthroughs();
     }
+  }
+
+  _applyOptionsWithDefaults(defaults) {
+    _forOwn(defaults, (defaultValue, name) => {
+      if (this.options && this.options[name]) {
+        this[name] = this.options[name];
+      } else if (this[name] !== undefined) {
+        this[name] = defaultValue;
+      }
+    });
   }
 
   /**
@@ -243,19 +257,6 @@ export default class Server {
     } else {
       console.log(...args);
     }
-  }
-
-  /**
-   * Load the configuration given, setting timing to 0 if in the test
-   * environment.
-   *
-   * @method loadConfig
-   * @param {Object} config The configuration to load.
-   * @public
-   */
-  loadConfig(config) {
-    config.call(this);
-    this.timing = this.isTest() ? 0 : (this.timing || 0);
   }
 
   /**

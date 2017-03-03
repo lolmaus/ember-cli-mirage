@@ -20,12 +20,10 @@ test('it can passthrough individual paths', function(assert) {
   let done2 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.get('/contacts', function() {
-      return 123;
-    });
-    this.passthrough('/addresses');
+  server.get('/contacts', function() {
+    return 123;
   });
+  server.passthrough('/addresses');
 
   $.ajax({
     method: 'GET',
@@ -53,12 +51,11 @@ test('it can passthrough certain verbs for individual paths', function(assert) {
   let done3 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.get('/contacts', function() {
-      return 123;
-    });
-    this.passthrough('/addresses', ['post']);
+  server.get('/contacts', function() {
+    return 123;
   });
+  server.passthrough('/addresses', ['post']);
+
   server.pretender.unhandledRequest = function(/* verb, path */) {
     assert.ok(true, 'it doesnt passthrough GET');
     done2();
@@ -94,12 +91,10 @@ test('it can passthrough multiple paths in a single call', function(assert) {
   let done2 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.get('/contacts', function() {
-      return 123;
-    });
-    this.passthrough('/contacts', '/addresses');
+  server.get('/contacts', function() {
+    return 123;
   });
+  server.passthrough('/contacts', '/addresses');
 
   $.ajax({
     method: 'GET',
@@ -126,10 +121,8 @@ test('user can call passthrough multiple times', function(assert) {
   let done2 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.passthrough('/contacts');
-    this.passthrough('/addresses', ['post']);
-  });
+  server.passthrough('/contacts');
+  server.passthrough('/addresses', ['post']);
 
   $.ajax({
     method: 'GET',
@@ -156,12 +149,10 @@ test('passthrough without args allows all paths on the current domain to passthr
   let done2 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.get('/contacts', function() {
-      return 123;
-    });
-    this.passthrough();
+  server.get('/contacts', function() {
+    return 123;
   });
+  server.passthrough();
 
   $.ajax({
     method: 'GET',
@@ -188,12 +179,10 @@ test('passthrough without args allows index route on current domain to passthrou
   let done2 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.get('/contacts', function() {
-      return 123;
-    });
-    this.passthrough();
+  server.get('/contacts', function() {
+    return 123;
   });
+  server.passthrough();
 
   $.ajax({
     method: 'GET',
@@ -224,9 +213,7 @@ test('it can passthrough other-origin hosts', function(assert) {
   let done1 = assert.async();
   let { server } = this;
 
-  server.loadConfig(function() {
-    this.passthrough('http://api.foo.bar/**');
-  });
+  server.passthrough('http://api.foo.bar/**');
 
   $.ajax({
     method: 'GET',

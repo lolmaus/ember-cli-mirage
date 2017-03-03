@@ -27,32 +27,6 @@ test('it runs the default scenario in non-test environments', function(assert) {
   server.shutdown();
 });
 
-module('Unit | Server #loadConfig');
-
-test('forces timing to 0 in test environment', function(assert) {
-  let server = new Server({ environment: 'test' });
-
-  server.loadConfig(function() {
-    this.timing = 50;
-  });
-
-  assert.equal(server.timing, 0);
-
-  server.shutdown();
-});
-
-test("doesn't modify user's timing config in other environments", function(assert) {
-  let server = new Server({ environment: 'blah' });
-
-  server.loadConfig(function() {
-    this.timing = 50;
-  });
-
-  assert.equal(server.timing, 50);
-
-  server.shutdown();
-});
-
 module('Unit | Server #db');
 
 test('its db is isolated across instances', function(assert) {
